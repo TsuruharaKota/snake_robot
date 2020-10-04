@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/snake.dir/main.cpp.o CMakeFiles/snake.dir/joystick.cpp.o  -o snake /usr/lib/x86_64-linux-gnu/libpython3.6m.so 
