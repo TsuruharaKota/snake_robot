@@ -9,6 +9,7 @@
 #include"vector"
 #include<fstream>
 #include<iomanip>
+#include"serial_ubuntu.h"
 
 using namespace std::chrono;
 //namespace plt = matplotlibcpp;
@@ -37,6 +38,8 @@ int main(){
     std::array<std::vector<double>, joint_num> data_box;
     double timer_calb = get_time_sec();
     double timer{};
+    SerialTermios serial;
+    float write_data[joint_num]{};
     while(!stop_loop){
         usleep(1000);
         timer = get_time_sec() - timer_calb;
@@ -76,10 +79,14 @@ int main(){
             servo_theta[i] = SerpenoidCurve(angular_frequency, timer, offset_theta[i], turn_theta);
             data_box[i].push_back(servo_theta[i]);
             //std::cout << i << " " << servo_theta[i] << std::endl;
+            write_data[i] = servo_theta[i];
         }
         //plt::plot(time_box, data_box, ".-r");
         //plt::pause(0.01);
         std::cout << servo_theta[0] << std::endl;
+
+        //serial write
+        serial.serialWrite(write_data);
     }
     std::ofstream outputFile("trajectory.txt");
     for(int i = 0; i < data_box[0].size(); ++i){

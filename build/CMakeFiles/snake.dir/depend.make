@@ -6,4 +6,5 @@ CMakeFiles/snake.dir/joystick.cpp.o: ../joystick.h
 
 CMakeFiles/snake.dir/main.cpp.o: ../joystick.h
 CMakeFiles/snake.dir/main.cpp.o: ../main.cpp
+CMakeFiles/snake.dir/main.cpp.o: ../serial_ubuntu.h
 

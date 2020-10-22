@@ -58,7 +58,7 @@ void serialReceive(float *receive_result, Serial &obj){
     {5, 0, 0, 0, 0},
     {6, 0, 0, 0, 0},
     {7, 0, 0, 0, 0},
-    {8, 0, 0, 0, 0},
+    {8, 0, 0, 0, 0}
   };
   got_data = static_cast<uint8_t>(obj.getc());
   if(got_data == HEAD_BYTE){
