@@ -11,6 +11,9 @@ constexpr double max_speed = 1.0;  //[m/s]
 double SerpenoidCurve(double angular_frequency_, double timer_, double offset_theta_, double turn_theta_){
     return (amplitude * sin(angular_frequency_ * timer_ + (offset_theta_ * (M_PI / 180)) + turn_theta_) * (180 / M_PI)); 
 }
+double convOutput(double val){
+  return val + 90;
+}
 
 class ServoSg90: public PwmOut
 {
@@ -49,7 +52,7 @@ int ServoSg90::roll( unsigned int angle ){
     return 0;
 }
 
-ServoSg90  snake_joint[9] = {D9, D10, D2, D3, D4, D11, D6, D7, D8};
+ServoSg90  snake_joint[9] = {PC_6, D10, D2, D3, PC_8, PC_9, PB_7, PA_0, D8};
 //Serial pc(USBTX, USBRX, 115200);
 
 int main(){
@@ -67,14 +70,32 @@ int main(){
   double timer{};
   float write_data[joint_num]{};
   while(1){
-    timer = tim.read();
-    for(int i = 0; i < joint_num; ++i){
+    timer = (float)tim.read_ms() / 1000;
+    /*for(int i = 0; i < joint_num; ++i){
       servo_theta[i] = SerpenoidCurve(max_speed, timer, offset_theta[i], turn_theta);
       write_data[i] = servo_theta[i];
       snake_joint_deg_ref[i] = servo_theta[i];
     }
     for(int i = 0; i < 9; ++i){
-      snake_joint[i].roll(snake_joint_deg_ref[i]);
-    }
+      snake_joint[i].roll((unsigned int)convOutput(snake_joint_deg_ref[i]));
+    }*/
+    snake_joint[0].roll((unsigned int)convOutput(60 * sin( 6 * timer * 100        * (M_PI / 180))));
+    wait(0.01);
+    snake_joint[1].roll((unsigned int)convOutput(60 * sin((6 * timer * 100 +  60) * (M_PI / 180))));
+    wait(0.01);
+    snake_joint[2].roll((unsigned int)convOutput(60 * sin((6 * timer * 100 + 120) * (M_PI / 180))));
+    wait(0.01);
+    snake_joint[3].roll((unsigned int)convOutput(60 * sin((6 * timer * 100 + 180) * (M_PI / 180))));
+    wait(0.01);
+    snake_joint[4].roll((unsigned int)convOutput(60 * sin((6 * timer * 100 + 240) * (M_PI / 180))));
+    wait(0.01);
+    snake_joint[5].roll((unsigned int)convOutput(60 * sin((6 * timer * 100 + 300) * (M_PI / 180))));
+    wait(0.01);
+    snake_joint[6].roll((unsigned int)convOutput(60 * sin((6 * timer * 100 + 360) * (M_PI / 180))));
+    wait(0.01);
+    snake_joint[7].roll((unsigned int)convOutput(60 * sin((6 * timer * 100 + 420) * (M_PI / 180))));
+    wait(0.01);
+    snake_joint[8].roll((unsigned int)convOutput(60 * sin((6 * timer * 100 + 480) * (M_PI / 180))));
+    wait(0.01);
   }
 }
