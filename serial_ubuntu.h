@@ -105,6 +105,7 @@ class SerialTermios{
             while(size != 1){
                 size = read(_fd, _read_buf, sizeof(_read_buf));
                 if(size == 1){
+                    //std::cerr << "ok" << std::endl;
                     return _read_buf[0];
                 }
             }
@@ -145,10 +146,10 @@ class SerialTermios{
             }
             return read_data_sum;
         }*/
-        void serialRead(float *receive_result){
+        void serialRead(){
             uint8_t got_data{};
             uint8_t checksum_receive{};
-            uint8_t receive_data[5];
+            uint8_t receive_data[9]{};
             unsigned char receiveFormat[9][5] = {
                 {0, 0, 0, 0, 0},
                 {1, 0, 0, 0, 0},
@@ -161,33 +162,32 @@ class SerialTermios{
                 {8, 0, 0, 0, 0}
             };
             got_data = static_cast<uint8_t>(serialReadOne());
-            //got_data = static_cast<uint8_t>(0xFF); 
-            //std::cout << "ERROR " << static_cast<int>(got_data) << std::endl;
             if(got_data == HEAD_BYTE){
-                std::cout << "HEAD_BYTE" << std::endl;
                 got_data = static_cast<uint8_t>(serialReadOne());
                 if(got_data == STX){
-                    std::cout << "STX" << std::endl;
                     checksum_receive += HEAD_BYTE;
                     checksum_receive += STX;
                     for(int k = 0; k < 9; ++k){
                         for(int i = 0; i < 5; ++i){
                             receive_data[i] = static_cast<uint8_t>(serialReadOne());
                             checksum_receive += receive_data[i];
-                            receiveFormat[receive_data[0]][i] = receive_data[i];
+                            int temp_data  = static_cast<int>(receive_data[0]);
+                            if((0 <= temp_data) && (temp_data <= 9)){
+                                receiveFormat[receive_data[0]][i] = receive_data[i];
+                            }
                         }       
                     }
                     got_data = static_cast<uint8_t>(serialReadOne());
                     if(got_data == checksum_receive){
-                        int32_t result[2];
+                        int32_t result[9]{};
                         for(int i = 0; i < 9; ++i){
                             //receiveFormat[i][0]はidである
                             result[i] = static_cast<int32_t>((receiveFormat[i][1] << 24 & 0xFF000000)
-                                         | (receiveFormat[i][2] << 16 & 0x00FF0000)
-                                         | (receiveFormat[i][3] <<  8 & 0x0000FF00)
-                                         | (receiveFormat[i][4] <<  0 & 0x000000FF)
+                                                           | (receiveFormat[i][2] << 16 & 0x00FF0000)
+                                                           | (receiveFormat[i][3] <<  8 & 0x0000FF00)
+                                                           | (receiveFormat[i][4] <<  0 & 0x000000FF)
                             );
-                            memcpy(&receive_result[i], &result[i], 4);
+                            memcpy(&_read_data[i], &result[i], 4);
                         }
                     }
                 }
