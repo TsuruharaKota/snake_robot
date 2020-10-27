@@ -5,6 +5,7 @@
 #include"joystick.h"
 #include<unistd.h>
 #include<string>
+#include<string.h>
 //#include"matplotlibcpp.h"
 #include"vector"
 #include<fstream>
@@ -86,7 +87,8 @@ int main(){
         std::cout << servo_theta[0] << std::endl;
 
         //serial write
-        serial.serialWrite(write_data);
+        memcpy(serial._write_data, write_data, sizeof(write_data));
+        serial.serialWrite();
     }
     std::ofstream outputFile("trajectory.txt");
     for(int i = 0; i < data_box[0].size(); ++i){
