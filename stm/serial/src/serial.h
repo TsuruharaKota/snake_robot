@@ -2,6 +2,8 @@
 #define SERIAL_H_
 
 #include"mbed.h"
+#include"string.h"
+
 #define HEAD_BYTE 0xFF
 #define STX 0x02
 void serialSend(float *send_data, Serial &obj){ 
@@ -43,11 +45,11 @@ void serialSend(float *send_data, Serial &obj){
   //send checksum
   obj.putc(checksum_send);
 }
-
+//DigitalOut led(LED1);
 void serialReceive(float *receive_result, Serial &obj){
   uint8_t got_data{};
   uint8_t checksum_receive{};
-  uint8_t receive_data[5];
+  uint8_t receive_data[9];
   unsigned char receiveFormat[9][5] = {
     {0, 0, 0, 0, 0},
     {1, 0, 0, 0, 0},
@@ -61,19 +63,25 @@ void serialReceive(float *receive_result, Serial &obj){
   };
   got_data = static_cast<uint8_t>(obj.getc());
   if(got_data == HEAD_BYTE){
+    //led = 1;
     got_data = static_cast<uint8_t>(obj.getc());
     if(got_data == STX){
+      //led = 1;
       checksum_receive += HEAD_BYTE;
       checksum_receive += STX;
       for(int k = 0; k < 9; ++k){
         for(int i = 0; i < 5; ++i){
           receive_data[i] = static_cast<uint8_t>(obj.getc());
           checksum_receive += receive_data[i];
-          receiveFormat[receive_data[0]][i] = receive_data[i];
+          int temp_data  = static_cast<int>(receive_data[0]);
+          if((0 <= temp_data) && (temp_data <= 9)){
+            receiveFormat[receive_data[0]][i] = receive_data[i];
+          }
         }
       }
       got_data = static_cast<uint8_t>(obj.getc());
       if(got_data == checksum_receive){
+        //led = 0;
         int32_t result[2];
         for(int i = 0; i < 9; ++i){
           //receiveFormat[i][0]はidである

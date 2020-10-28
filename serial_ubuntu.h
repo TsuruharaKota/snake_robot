@@ -12,6 +12,7 @@
 #include <string>
 #include <string.h>
 #include <iostream>
+#include <tuple>
 
 #define SERIAL_PORT "/dev/ttyACM0"
 
@@ -55,12 +56,21 @@ class SerialTermios{
                 std::cerr << "Serial Fail" << std::endl;
             }
         }
-        void serialWriteOne(char write_c_){
+        /*void serialWriteOne(char write_c_){
             std::string write_str = std::to_string(write_c_);
+            //char c = 0xFF;
+            //std::cout << static_cast<int>(c) << std::endl;
+            //std::string write_str = std::to_string(c);
+            //int data  = stoi(write_str);
+            //std::cout << "0 = " << write_str[0] << " 1 = " << write_str[1] << std::endl;
+            //const char * sum = write_str.c_str();
+            //std::cout << static_cast<int>(sum[0]) << std::endl;
+            std::cout << "size = " << write_str.size() << std::endl;
             int rec = write(_fd, write_str.c_str(), write_str.size());
-        }
+        }*/
         void serialWrite(float *send_data){
             uint8_t checksum_send = 0;
+            unsigned char write_buf[48]{};
             unsigned char data_h_h[9]{};
             unsigned char data_h_l[9]{};
             unsigned char data_l_h[9]{};
@@ -83,70 +93,51 @@ class SerialTermios{
                 {6, data_h_h[6], data_h_l[6], data_l_h[6], data_l_l[6]},
                 {7, data_h_h[7], data_h_l[7], data_l_h[7], data_l_l[7]},
                 {8, data_h_h[8], data_h_l[8], data_l_h[8], data_l_l[8]},
-            };    
-            //send head byte
-            serialWriteOne(HEAD_BYTE);
+            };
+            write_buf[0] = HEAD_BYTE;
+            //serialWriteOne(HEAD_BYTE);
             checksum_send += HEAD_BYTE;
-            serialWriteOne(STX);
+            write_buf[1] = STX;
+            //serialWriteOne(STX);
             checksum_send += STX;
+            int count = 1;
             for(int i = 0; i < 9; ++i){
                 for(int k = 0; k < 5; ++k){
-                    serialWriteOne(sendFormat[i][k]);
+                    ++count;
+                    write_buf[count] = sendFormat[i][k];
+                    //serialWriteOne(sendFormat[i][k]);
                     checksum_send += sendFormat[i][k];
-                    //std::cout << static_cast<int>(checksum_send) << std::endl;
                 }
             }
-            //send checksum
-            //std::cout << static_cast<int>(checksum_send) << std::endl;
-            serialWriteOne(checksum_send);
+            count++;
+            write_buf[count] = checksum_send;
+            //serialWriteOne(checksum_send);
+            //std::cout << "sum = " << static_cast<int>(checksum_send) << "size = " << write_str.size() << std::endl;
+            write(_fd, write_buf, 48);
         }
+        /*bool timeOut(){
+            return _timeout_counter > _timeout ? true : false;
+        }*/
         char serialReadOne(){
+            constexpr int COUNT_MAX = 10000; //timeout
             int size = 0;
+            int count = 0;
             while(size != 1){
-                size = read(_fd, _read_buf, sizeof(_read_buf));
-                if(size == 1){
-                    //std::cerr << "ok" << std::endl;
-                    return _read_buf[0];
+                //++_timeout_counter;
+                ++count;
+                if(count > COUNT_MAX){
+                    //std::cout << "COUNT ERROR" << std::endl;
+                    //return 'a'; //timeoutが発生しているのでゴミデータの送信を行う
+                }else{
+                    size = read(_fd, _read_buf, sizeof(_read_buf));
+                    if(size == 1){
+                        return  _read_buf[0];
+                    }
                 }
             }
-            /*else{
-                
-                if (0 < size) {
-                    for(int i = 0; i < sizeof(_read_buf); i++) {
-                        printf("%c", _read_buf[i]);
-                    }
-                    printf("\n");
-                }
-            }*/
         }        
-        /*char serialReadOne(){
-            char buf[256]={};
-            int recv_data=read(_fd, buf, sizeof(buf));
-            //std::string read_str = "NO DATA";
-            std::cout << "error" << std::endl;
-            if(recv_data>0){
-                //printf("recv:%03d %s\n",recv_data,buf);
-                std::string read_str = buf;
-                char return_data = read_str[0];
-                return return_data;
-            }
-            //return read_str;
-        }*/
-        /*std::string serialReadStr(){
-            std::string read_data_sum;
-            while(1){
-                std::string read_data = serialReadOne();
-                if(read_data != "NO DATA"){
-                    if(read_data != "\n"){
-                        read_data_sum += read_data;
-                    }else{
-                        break;
-                    }
-                }
-            }
-            return read_data_sum;
-        }*/
         void serialRead(){
+            //serialLoopInit();   
             uint8_t got_data{};
             uint8_t checksum_receive{};
             uint8_t receive_data[9]{};
@@ -162,26 +153,32 @@ class SerialTermios{
                 {8, 0, 0, 0, 0}
             };
             got_data = static_cast<uint8_t>(serialReadOne());
+            std::cout << "NON_HEAD_BYTE" << std::endl;
             if(got_data == HEAD_BYTE){
+                std::cout << "HEAD_BYTE" << std::endl;
                 got_data = static_cast<uint8_t>(serialReadOne());
                 if(got_data == STX){
+                    std::cout << "STX" << std::endl;
                     checksum_receive += HEAD_BYTE;
                     checksum_receive += STX;
                     for(int k = 0; k < 9; ++k){
                         for(int i = 0; i < 5; ++i){
                             receive_data[i] = static_cast<uint8_t>(serialReadOne());
+                            //if(timeOut())break;
                             checksum_receive += receive_data[i];
                             int temp_data  = static_cast<int>(receive_data[0]);
                             if((0 <= temp_data) && (temp_data <= 9)){
                                 receiveFormat[receive_data[0]][i] = receive_data[i];
+                            }else{
+                                break;
                             }
-                        }       
+                        }
                     }
                     got_data = static_cast<uint8_t>(serialReadOne());
                     if(got_data == checksum_receive){
+                        std::cout << "CHECKSUM_OK" << std::endl;
                         int32_t result[9]{};
                         for(int i = 0; i < 9; ++i){
-                            //receiveFormat[i][0]はidである
                             result[i] = static_cast<int32_t>((receiveFormat[i][1] << 24 & 0xFF000000)
                                                            | (receiveFormat[i][2] << 16 & 0x00FF0000)
                                                            | (receiveFormat[i][3] <<  8 & 0x0000FF00)
@@ -189,6 +186,8 @@ class SerialTermios{
                             );
                             memcpy(&_read_data[i], &result[i], 4);
                         }
+                    }else{
+                        std::cout << "OK" << std::endl;
                     }
                 }
             }
@@ -196,6 +195,11 @@ class SerialTermios{
         float _write_data[9];
         float _read_data[9];
     private:
+        /*void serialLoopInit(){
+            _timeout_counter = 0;
+        }
+        const int _timeout;*/
+        int _timeout_counter;
         termios _tio;
         int _fd;
         char _read_buf[255];
