@@ -4,7 +4,7 @@
 #include<thread>
 
 int main(){
-    float write_data[9] = {0, 1.3, 2.98, 3.98, 4.532, 5.6, 6.31, 7.43, 8};
+    float write_data[9] = {0, -1.3, 2.98, 3.98, 4.532, 5.6, 6.31, 7.43, 8};
     float read_data[9]{};
     SerialTermios serial;
     while(1){

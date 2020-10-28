@@ -12,14 +12,11 @@ int main() {
     while(1) {
         //++counter;
         //float send_data[9];
-        led=1;
-        wait(1);
-        led = 0;
         serialReceive(receive_data, pc);
         //memcpy(send_data, receive_data, sizeof(receive_data));
-        /*for(int i = 0; i < 9; ++i){
+        for(int i = 0; i < 9; ++i){
             send_data[i] = receive_data[i];
-        }*/
+        }
         serialSend(send_data, pc);
     }
 }

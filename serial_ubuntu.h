@@ -127,7 +127,7 @@ class SerialTermios{
                 ++count;
                 if(count > COUNT_MAX){
                     //std::cout << "COUNT ERROR" << std::endl;
-                    //return 'a'; //timeoutが発生しているのでゴミデータの送信を行う
+                    return 'a'; //timeoutが発生しているのでゴミデータの送信を行う
                 }else{
                     size = read(_fd, _read_buf, sizeof(_read_buf));
                     if(size == 1){
@@ -153,12 +153,9 @@ class SerialTermios{
                 {8, 0, 0, 0, 0}
             };
             got_data = static_cast<uint8_t>(serialReadOne());
-            std::cout << "NON_HEAD_BYTE" << std::endl;
             if(got_data == HEAD_BYTE){
-                std::cout << "HEAD_BYTE" << std::endl;
                 got_data = static_cast<uint8_t>(serialReadOne());
                 if(got_data == STX){
-                    std::cout << "STX" << std::endl;
                     checksum_receive += HEAD_BYTE;
                     checksum_receive += STX;
                     for(int k = 0; k < 9; ++k){
@@ -176,7 +173,6 @@ class SerialTermios{
                     }
                     got_data = static_cast<uint8_t>(serialReadOne());
                     if(got_data == checksum_receive){
-                        std::cout << "CHECKSUM_OK" << std::endl;
                         int32_t result[9]{};
                         for(int i = 0; i < 9; ++i){
                             result[i] = static_cast<int32_t>((receiveFormat[i][1] << 24 & 0xFF000000)
