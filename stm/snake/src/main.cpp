@@ -4,14 +4,11 @@
 #define SG_PERIOD 20     /* 20[msec] */
 #define SG_NEUTRAL 1450  /* 90° 1450[usec] */
 
-constexpr int joint_num = 9;
-constexpr double amplitude = 1.0; //振幅(位相)
-constexpr double max_speed = 1.0;  //[m/s]
-
-double SerpenoidCurve(double angular_frequency_, double timer_, double offset_theta_, double turn_theta_){
-    return (amplitude * sin(angular_frequency_ * timer_ + (offset_theta_ * (M_PI / 180)) + turn_theta_) * (180 / M_PI)); 
+//最大偏角, 推進速度, 時間, 関節ごとのオフセット, 旋回角度
+float SerpenoidCurve(float max_angle_, float angular_, float timer_, float offset_deg_, float turn_deg_){
+    return (max_angle_ * sin((angular_ * timer_ * 100) + (offset_deg_ * (M_PI / 180))) + (turn_deg_ * (180 / M_PI))); 
 }
-double convOutput(double val){
+float convOutput(float val){
   return val + 90;
 }
 
@@ -53,32 +50,38 @@ int ServoSg90::roll( unsigned int angle ){
 }
 
 ServoSg90  snake_joint[9] = {PC_6, D10, D2, D3, PC_8, PC_9, PB_7, PA_0, D8};
-//Serial pc(USBTX, USBRX, 115200);
+Serial pc(USBTX, USBRX, 9600);
 
 int main(){
-  float snake_joint_deg_ref[9];
+  constexpr int joint_num = 9;
+  constexpr float max_deg = 60;
+  float receive_data[2] = {}; //[0] = 推進速度, [1] = 旋回角度[deg]
+  float send_data[2] = {};
 /* init servo */
-  for(int i = 0; i < 9; ++i){
+  for(int i = 0; i < joint_num; ++i){
     snake_joint[i].init();
   }
-  constexpr std::array<double, joint_num> offset_theta{0, 60, 120, 180, 240, 300, 360, 420, 480}; //前回角度
-  std::array<double, joint_num> servo_theta;
-  double turn_theta = 0;
+  constexpr std::array<float, joint_num> offset_theta{0, 60, 120, 180, 240, 300, 360, 420, 480}; //各関節ごとのオフセット
+  std::array<float, joint_num> servo_theta;
   Timer tim;
   tim.start();
   tim.reset();
-  double timer{};
-  float write_data[joint_num]{};
+  float timer{};
   while(1){
+    serialReceive(receive_data, pc);
+    send_data[0] = receive_data[0];
+    send_data[1] = receive_data[1];
+    serialSend(send_data, pc);
+    //receive_data[0] = 6;
+    //receive_data[1] = 0;
     timer = (float)tim.read_ms() / 1000;
-    /*for(int i = 0; i < joint_num; ++i){
-      servo_theta[i] = SerpenoidCurve(max_speed, timer, offset_theta[i], turn_theta);
-      write_data[i] = servo_theta[i];
-      snake_joint_deg_ref[i] = servo_theta[i];
+    for(int i = 0; i < joint_num; ++i){
+      snake_joint[i].roll((unsigned int)convOutput(SerpenoidCurve(max_deg, receive_data[0], timer, offset_theta[i], receive_data[1])));
+      wait(0.01);
     }
-    for(int i = 0; i < 9; ++i){
-      snake_joint[i].roll((unsigned int)convOutput(snake_joint_deg_ref[i]));
-    }*/
+  }
+}
+    /*
     snake_joint[0].roll((unsigned int)convOutput(60 * sin( 6 * timer * 100        * (M_PI / 180))));
     wait(0.01);
     snake_joint[1].roll((unsigned int)convOutput(60 * sin((6 * timer * 100 +  60) * (M_PI / 180))));
@@ -99,3 +102,4 @@ int main(){
     wait(0.01);
   }
 }
+*/

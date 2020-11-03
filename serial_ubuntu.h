@@ -70,29 +70,22 @@ class SerialTermios{
         }*/
         void serialWrite(float *send_data){
             uint8_t checksum_send = 0;
-            unsigned char write_buf[48]{};
-            unsigned char data_h_h[9]{};
-            unsigned char data_h_l[9]{};
-            unsigned char data_l_h[9]{};
-            unsigned char data_l_l[9]{};
-            uint32_t byte_divide[9]{};
-            for(int i = 0; i < 9; ++i){
+            unsigned char write_buf[13]{};
+            unsigned char data_h_h[2]{};
+            unsigned char data_h_l[2]{};
+            unsigned char data_l_h[2]{};
+            unsigned char data_l_l[2]{};
+            uint32_t byte_divide[2]{};
+            for(int i = 0; i < 2; ++i){
                 memcpy(&byte_divide[i], &send_data[i], 4);
                 data_h_h[i] = (byte_divide[i] >> 24) & 0xFF;
                 data_h_l[i] = (byte_divide[i] >> 16) & 0xFF;
                 data_l_h[i] = (byte_divide[i] >> 8) & 0xFF;
                 data_l_l[i] = (byte_divide[i] >> 0) & 0xFF;
             }
-            unsigned char sendFormat[9][5] = {
+            unsigned char sendFormat[2][5] = {
                 {0, data_h_h[0], data_h_l[0], data_l_h[0], data_l_l[0]},
                 {1, data_h_h[1], data_h_l[1], data_l_h[1], data_l_l[1]},
-                {2, data_h_h[2], data_h_l[2], data_l_h[2], data_l_l[2]},
-                {3, data_h_h[3], data_h_l[3], data_l_h[3], data_l_l[3]},
-                {4, data_h_h[4], data_h_l[4], data_l_h[4], data_l_l[4]},
-                {5, data_h_h[5], data_h_l[5], data_l_h[5], data_l_l[5]},
-                {6, data_h_h[6], data_h_l[6], data_l_h[6], data_l_l[6]},
-                {7, data_h_h[7], data_h_l[7], data_l_h[7], data_l_l[7]},
-                {8, data_h_h[8], data_h_l[8], data_l_h[8], data_l_l[8]},
             };
             write_buf[0] = HEAD_BYTE;
             //serialWriteOne(HEAD_BYTE);
@@ -101,7 +94,7 @@ class SerialTermios{
             //serialWriteOne(STX);
             checksum_send += STX;
             int count = 1;
-            for(int i = 0; i < 9; ++i){
+            for(int i = 0; i < 2; ++i){
                 for(int k = 0; k < 5; ++k){
                     ++count;
                     write_buf[count] = sendFormat[i][k];
@@ -113,7 +106,7 @@ class SerialTermios{
             write_buf[count] = checksum_send;
             //serialWriteOne(checksum_send);
             //std::cout << "sum = " << static_cast<int>(checksum_send) << "size = " << write_str.size() << std::endl;
-            write(_fd, write_buf, 48);
+            write(_fd, write_buf, 13);
         }
         /*bool timeOut(){
             return _timeout_counter > _timeout ? true : false;
@@ -140,17 +133,10 @@ class SerialTermios{
             //serialLoopInit();   
             uint8_t got_data{};
             uint8_t checksum_receive{};
-            uint8_t receive_data[9]{};
-            unsigned char receiveFormat[9][5] = {
+            uint8_t receive_data[5]{};
+            unsigned char receiveFormat[2][5] = {
                 {0, 0, 0, 0, 0},
                 {1, 0, 0, 0, 0},
-                {2, 0, 0, 0, 0},
-                {3, 0, 0, 0, 0},
-                {4, 0, 0, 0, 0},
-                {5, 0, 0, 0, 0},
-                {6, 0, 0, 0, 0},
-                {7, 0, 0, 0, 0},
-                {8, 0, 0, 0, 0}
             };
             got_data = static_cast<uint8_t>(serialReadOne());
             if(got_data == HEAD_BYTE){
@@ -158,13 +144,13 @@ class SerialTermios{
                 if(got_data == STX){
                     checksum_receive += HEAD_BYTE;
                     checksum_receive += STX;
-                    for(int k = 0; k < 9; ++k){
+                    for(int k = 0; k < 2; ++k){
                         for(int i = 0; i < 5; ++i){
                             receive_data[i] = static_cast<uint8_t>(serialReadOne());
                             //if(timeOut())break;
                             checksum_receive += receive_data[i];
                             int temp_data  = static_cast<int>(receive_data[0]);
-                            if((0 <= temp_data) && (temp_data <= 9)){
+                            if((0 <= temp_data) && (temp_data <= 1)){
                                 receiveFormat[receive_data[0]][i] = receive_data[i];
                             }else{
                                 break;
@@ -173,8 +159,8 @@ class SerialTermios{
                     }
                     got_data = static_cast<uint8_t>(serialReadOne());
                     if(got_data == checksum_receive){
-                        int32_t result[9]{};
-                        for(int i = 0; i < 9; ++i){
+                        int32_t result[2]{};
+                        for(int i = 0; i < 2; ++i){
                             result[i] = static_cast<int32_t>((receiveFormat[i][1] << 24 & 0xFF000000)
                                                            | (receiveFormat[i][2] << 16 & 0x00FF0000)
                                                            | (receiveFormat[i][3] <<  8 & 0x0000FF00)
@@ -188,8 +174,8 @@ class SerialTermios{
                 }
             }
         }
-        float _write_data[9];
-        float _read_data[9];
+        float _write_data[2];
+        float _read_data[2];
     private:
         /*void serialLoopInit(){
             _timeout_counter = 0;

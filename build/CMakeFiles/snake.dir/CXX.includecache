@@ -45,6 +45,8 @@ unistd.h
 -
 string
 -
+string.h
+-
 vector
 /home/tsuruhara/snake_robot/vector
 fstream
@@ -71,8 +73,12 @@ stdio.h
 -
 stdlib.h
 -
+string
+-
 string.h
 -
 iostream
+-
+tuple
 -
 
