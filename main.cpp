@@ -51,7 +51,7 @@ int main(){
                     case 2:
                         break;
                     case 3:
-                        write_data[1] = map(key_val, -32767, 32767, 90, -90);
+                        write_data[1] = map(key_val, -32767, 32767, 15, -15);
                         if(fabs(write_data[1]) < 7)write_data[1] = 0;
                         break;
                     case 4:
@@ -67,6 +67,9 @@ int main(){
         std::cout << "write_data[0] = " << write_data[0] << " write_data[1] = " << write_data[1] << std::endl;
         serial.serialWrite(write_data);
         serial.serialRead();
-        std::cout << "read_data[0] = " << serial._read_data[0] << " read_data[1]" << serial._read_data[1] << std::endl;
+        for(auto data : serial._read_data){
+            std::cout << data << " ";
+        }
+        std::cout << std::endl;
     }
 }

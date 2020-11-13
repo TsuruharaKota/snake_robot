@@ -24,10 +24,10 @@ class SerialTermios{
     public:
         SerialTermios(){
             _fd = open(SERIAL_PORT, O_RDWR | O_NOCTTY | O_NONBLOCK);
-            /*fcntl(_fd, F_SETFL, 0);
+            fcntl(_fd, F_SETFL, 0);
             tcgetattr(_fd, &_tio);
             //set baudrate
-            speed_t BAUDRATE = B4800;
+            speed_t BAUDRATE = B115200;
             cfsetispeed(&_tio, BAUDRATE);
             cfsetospeed(&_tio, BAUDRATE);
             //non canonical, non echo back
@@ -37,7 +37,8 @@ class SerialTermios{
             _tio.c_cc[VTIME]=0;
             //store configuration
             tcsetattr(_fd, TCSANOW, &_tio);
-            */
+            
+           /*
             _tio.c_cflag += CREAD;               // 受信有効
             _tio.c_cflag += CLOCAL;              // ローカルライン（モデム制御なし）
             _tio.c_cflag += CS8;                 // データビット:8bit
@@ -51,7 +52,7 @@ class SerialTermios{
 
             tcsetattr(_fd, TCSANOW, &_tio);     // デバイスに設定を行う
             ioctl(_fd, TCSETS, &_tio);            // ポートの設定を有効にする
-
+            */
             if(_fd < 0){
                 std::cerr << "Serial Fail" << std::endl;
             }
@@ -134,9 +135,16 @@ class SerialTermios{
             uint8_t got_data{};
             uint8_t checksum_receive{};
             uint8_t receive_data[5]{};
-            unsigned char receiveFormat[2][5] = {
+            unsigned char receiveFormat[9][5] = {
                 {0, 0, 0, 0, 0},
                 {1, 0, 0, 0, 0},
+                {2, 0, 0, 0, 0},
+                {3, 0, 0, 0, 0},
+                {4, 0, 0, 0, 0},
+                {5, 0, 0, 0, 0},
+                {6, 0, 0, 0, 0},
+                {7, 0, 0, 0, 0},
+                {8, 0, 0, 0, 0},
             };
             got_data = static_cast<uint8_t>(serialReadOne());
             if(got_data == HEAD_BYTE){
@@ -144,13 +152,13 @@ class SerialTermios{
                 if(got_data == STX){
                     checksum_receive += HEAD_BYTE;
                     checksum_receive += STX;
-                    for(int k = 0; k < 2; ++k){
+                    for(int k = 0; k < 9; ++k){
                         for(int i = 0; i < 5; ++i){
                             receive_data[i] = static_cast<uint8_t>(serialReadOne());
                             //if(timeOut())break;
                             checksum_receive += receive_data[i];
                             int temp_data  = static_cast<int>(receive_data[0]);
-                            if((0 <= temp_data) && (temp_data <= 1)){
+                            if((0 <= temp_data) && (temp_data <= 9)){
                                 receiveFormat[receive_data[0]][i] = receive_data[i];
                             }else{
                                 break;
@@ -159,8 +167,8 @@ class SerialTermios{
                     }
                     got_data = static_cast<uint8_t>(serialReadOne());
                     if(got_data == checksum_receive){
-                        int32_t result[2]{};
-                        for(int i = 0; i < 2; ++i){
+                        int32_t result[9]{};
+                        for(int i = 0; i < 9; ++i){
                             result[i] = static_cast<int32_t>((receiveFormat[i][1] << 24 & 0xFF000000)
                                                            | (receiveFormat[i][2] << 16 & 0x00FF0000)
                                                            | (receiveFormat[i][3] <<  8 & 0x0000FF00)
@@ -175,7 +183,7 @@ class SerialTermios{
             }
         }
         float _write_data[2];
-        float _read_data[2];
+        float _read_data[9];
     private:
         /*void serialLoopInit(){
             _timeout_counter = 0;

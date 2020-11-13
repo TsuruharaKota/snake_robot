@@ -6,7 +6,7 @@
 
 //最大偏角, 推進速度, 時間, 関節ごとのオフセット, 旋回角度
 float SerpenoidCurve(float max_angle_, float angular_, float timer_, float offset_deg_, float turn_deg_){
-    return (max_angle_ * sin((angular_ * timer_ * 100) + (offset_deg_ * (M_PI / 180))) + (turn_deg_ * (180 / M_PI))); 
+    return (max_angle_ * sin((angular_ * timer_ * 100) + (offset_deg_ * (M_PI / 180))) + turn_deg_); 
 }
 float convOutput(float val){
   return val + 90;
@@ -50,33 +50,31 @@ int ServoSg90::roll( unsigned int angle ){
 }
 
 ServoSg90  snake_joint[9] = {PC_6, D10, D2, D3, PC_8, PC_9, PB_7, PA_0, D8};
-Serial pc(USBTX, USBRX, 9600);
+Serial pc(USBTX, USBRX, 115200);
 
 int main(){
   constexpr int joint_num = 9;
   constexpr float max_deg = 60;
   float receive_data[2] = {}; //[0] = 推進速度, [1] = 旋回角度[deg]
-  float send_data[2] = {};
+  float send_data[9] = {};
 /* init servo */
   for(int i = 0; i < joint_num; ++i){
     snake_joint[i].init();
   }
   constexpr std::array<float, joint_num> offset_theta{0, 60, 120, 180, 240, 300, 360, 420, 480}; //各関節ごとのオフセット
-  std::array<float, joint_num> servo_theta;
   Timer tim;
   tim.start();
   tim.reset();
   float timer{};
   while(1){
     serialReceive(receive_data, pc);
-    send_data[0] = receive_data[0];
-    send_data[1] = receive_data[1];
     serialSend(send_data, pc);
     //receive_data[0] = 6;
     //receive_data[1] = 0;
     timer = (float)tim.read_ms() / 1000;
     for(int i = 0; i < joint_num; ++i){
-      snake_joint[i].roll((unsigned int)convOutput(SerpenoidCurve(max_deg, receive_data[0], timer, offset_theta[i], receive_data[1])));
+      send_data[i] = (unsigned int)convOutput(SerpenoidCurve(max_deg, receive_data[0], timer, offset_theta[i], receive_data[1]));
+      snake_joint[i].roll(send_data[i]);
       wait(0.01);
     }
   }
