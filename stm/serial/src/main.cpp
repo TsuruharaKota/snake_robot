@@ -1,39 +1,31 @@
 #include "mbed.h"
-#include "serial.h"
+#include "serial_print.h"
+#include <string>
+#define HEAD_BYTE 0xFF
+#define STX 0x02
 
-Serial pc(USBTX, USBRX, 9600); // tx, rx
+Serial pc(USBTX, USBRX, 115200); // tx, rx
 
+int main(){
+    std::string str = "abcdefghijklmnopqrstuvwxyz"; 
+    while(1){
+        pc.printf("%c", HEAD_BYTE);
+        pc.printf("%c", STX);
+        uint8_t size = str.size();
+        pc.printf("%c", size);
+        pc.printf("%s\n", str.c_str());
+    }
+}
+
+/* 
 int main() {
-    //float send_data[9] = {};
-    float send_data[2] = {0.98, 1.45};
-    float receive_data[2]{};
-    int counter{};
-    DigitalOut led(LED1);
-    while(1) {
-        //++counter;
-        //float send_data[9];
-        serialReceive(receive_data, pc);
-        //memcpy(send_data, receive_data, sizeof(receive_data));
-        for(int i = 0; i < 2; ++i){
+    float receive_data[9];
+    float send_data[9] = {1.0 , 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+    while (true) { 
+        serialReceive(receive_data, pc); 
+        for(int i = 0; i < 9; ++i){
             send_data[i] = receive_data[i];
         }
         serialSend(send_data, pc);
     }
-}
-
-/*
-int main() {
-    float send_data[9] = {0.98, 1.45, 2.85, 3.43, 4.08, 5.76, 6.98, 7.64, 8.96};
-    int counter{};
-    while(1) {
-        /*++counter;
-        for(int i = 0; i < 9; ++i)
-        send_data[i] += 0.01;
-        if(counter > 1000){
-            for(int i = 0; i < 9; ++i)
-            send_data[i] = 0;
-        }
-        serialSend(send_data, pc);
-    }
-}
-*/
+}*/
