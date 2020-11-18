@@ -14,7 +14,21 @@
 #define HEAD_BYTE 0xFF
 #define STX 0x02
 #define SERIAL_PORT "/dev/ttyACM0"
-
+float data[9]{};
+void strToNum(std::string _str){
+    char *str = const_cast<char *>(_str.c_str());
+    char *ptr;
+    int i = 0;
+    ptr = strtok(str, ",");
+    data[i] = std::stof(ptr);
+    while(ptr != NULL) {
+        ptr = strtok(NULL, ",");
+        if(ptr != NULL) {
+            ++i;
+            data[i] = std::stof(ptr);
+        }
+    }
+}
 class SerialTermios{
     public:
         SerialTermios(){
@@ -47,34 +61,52 @@ class SerialTermios{
             //std::cout << write_str << std::endl;
             write(_fd, write_str.c_str(), write_str.size());
         }
-        void serialRead(){
-            std::string data_str = "0, 0, 0, 0, 0, 0, 0, 0, 0";
-            float cast_data[9];
-            char buf[255];
-            int len;
+        void strToNum(std::string _str){
+            char *str = const_cast<char *>(_str.c_str());
             char *ptr;
-            len = read(_fd, buf, sizeof(buf));
-            if(0 < len){
-                data_str.clear();
-                for(int i = 0; i < len; ++i){
-                    data_str.push_back(buf[i]);
-                }
-                std::cout << "OK " << len << std::endl;
-            }else{
-                //std::cout << "NO " << len << std::endl;
-            }
-            char *str = const_cast<char *>(data_str.c_str());
-            ptr = strtok(str, ",");
-            //printf("%s\n", ptr);
-            _read_data[0] = std::stof(ptr);
             int i = 0;
-            while(ptr != NULL){
-                ++i;
+            ptr = strtok(str, ",");
+            _read_data[i] = std::stof(ptr);
+            while(ptr != NULL) {
                 ptr = strtok(NULL, ",");
-                if(ptr != NULL){
-                    //printf("%s\n", ptr);
+                if(ptr != NULL) {
+                    ++i;
                     _read_data[i] = std::stof(ptr);
                 }
+            }
+        }
+        void serialRead(){
+            std::string result;
+            result.clear();
+            int str_size{};
+            int len;
+            len = read(_fd, _read_buf, sizeof(_read_buf));
+            if (0 < len) {
+                std::cout << len << std::endl;
+                for(int i = 0; i < len; i++) {
+                    if(_read_buf[i] == HEAD_BYTE){
+                        std::cout << "OK" << std::endl;
+                        if(i - 1 >= len)break;
+                        if(_read_buf[++i] == STX){
+                            std::cout << "NO" << std::endl;
+                            str_size = static_cast<int>(_read_buf[++i]);
+                            while(1){
+                                if(i - 1 >= len)break;
+                                if(_read_buf[++i] == '\n'){
+                                    result.push_back('\n');
+                                    if(result.size() == str_size + 1){
+                                        std::cout << result << std::endl;
+                                        strToNum(result);
+                                    }
+                                    result.clear();
+                                    break;
+                                }
+                                result.push_back(_read_buf[i]);
+                            }
+                        }
+                    }
+                }
+                //printf("\n");
             }
         }
         float _write_data[2];
@@ -85,8 +117,8 @@ class SerialTermios{
         int _fd;
         char _read_buf[255];
 };
+
 int main(){
-    
      unsigned char msg[] = "serial port open...\n";
     unsigned char buf[255];             // バッファ
     int fd;                             // ファイルディスクリプタ
@@ -138,6 +170,7 @@ int main(){
                                 result.push_back('\n');
                                 if(result.size() == str_size + 1){
                                     std::cout << result << std::endl;
+                                    strToNum(result);
                                 }
                                 result.clear();
                                 //printf("\n");
@@ -149,14 +182,14 @@ int main(){
                     }
                 }
             }
-            printf("\n");
+            std::cout << data[0] << " " << data[1] << " " << data[2] << " " << data[3] << " " << data[4] << " " << data[5] << " " << data[6] << " " << data[7] << " " << data[8] << std::endl;
             //std::cout << len << std::endl;
         }
 
         // エコーバック
         write(fd, buf, len);
     }
-   /* 
+    /*
     SerialTermios serial;
     float write_data[9] = {0.5f, 1.1f, 1.4f, 1.9f, 1.0f, 1.6f, 4.7f, 2.9f, 1.7f};
         while(1){

@@ -5,6 +5,9 @@
 #include"mbed.h"
 #include"string.h"
 
+#define HEAD_BYTE 0xFF
+#define STX 0x02
+
 void serialSend(float *send_data, Serial &pc){
     std::string write_str;
     for(int i = 0; i < 9; ++i){
@@ -15,6 +18,10 @@ void serialSend(float *send_data, Serial &pc){
             write_str.push_back('\n');
         }
     }
+    pc.printf("%c", HEAD_BYTE);
+    pc.printf("%c", STX);
+    uint8_t write_str_size = write_str.size();
+    pc.printf("%c", write_str_size);
     pc.printf("%s", write_str.c_str());
 }
 void serialReceive(float *receive_result, Serial &pc){
