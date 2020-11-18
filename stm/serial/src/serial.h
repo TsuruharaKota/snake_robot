@@ -33,9 +33,11 @@ void serialSend(float *send_data, Serial &obj){
     {8, data_h_h[8], data_h_l[8], data_l_h[8], data_l_l[8]},
   };
   //send head byte
-  obj.putc(HEAD_BYTE);
+  //obj.putc(HEAD_BYTE);
+  obj.printf("%c", HEAD_BYTE);
   checksum_send += HEAD_BYTE;
-  obj.putc(STX);
+  //obj.putc(STX);
+  obj.printf("%c", STX);
   checksum_send += STX;
   for(int i = 0; i < 9; ++i){
     for(int k = 0; k < 5; ++k){
