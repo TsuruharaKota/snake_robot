@@ -14,12 +14,12 @@ int pi = pigpio_start(0, 0);
 int serial_handle{};
 unsigned char dummy_flag{};
 //send
-float send_data[2]{};
+float send_data[9]{};
 //receive
 uint8_t got_data{};
 uint8_t byte_now{};
 uint8_t byte[2]{};
-float receive_result[5]{};
+float receive_result[9]{};
 
 typedef struct{
   uint16_t gyro_data;
@@ -27,8 +27,6 @@ typedef struct{
 }ReceiveFormat;
 
 void sendSerial(){
-  send_data[0] = 12.3;
-  send_data[1] = 45.6789;
   uint8_t checksum_send = 0;
   unsigned char data_h_h[9], data_h_l[9], data_l_h[9], data_l_l[9];
   //divide byte
@@ -82,7 +80,7 @@ void receiveSerial(){
   };
   got_data = static_cast<uint8_t>(serial_read_byte(pi, serial_handle));
   if(got_data == HEAD_BYTE){
-    printf("HEAD %d\n", (int)got_data);
+    printf("HEAD\n");
     got_data = static_cast<uint8_t>(serial_read_byte(pi, serial_handle));
     if(got_data == STX){
       printf("STX\n");
@@ -128,8 +126,12 @@ int main(int argc, char **argv) {
   }
 
   while (1) {
+    for(int i = 0; i < 9; ++i){
+      send_data[i] += 0.1;
+    }
+    sendSerial();
     receiveSerial();
-    //printf("%f %f %f %f %f\n", receive_result[0], receive_result[1], receive_result[2], receive_result[3], receive_result[4]);
+    printf("%f %f %f %f %f %f %f %f %f\n", receive_result[0], receive_result[1], receive_result[2], receive_result[3], receive_result[4], receive_result[5], receive_result[6], receive_result[7], receive_result[8]);
   }
   serial_close(pi, serial_handle);
 }
