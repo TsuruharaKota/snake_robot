@@ -9,7 +9,7 @@ using std::memcpy;
 #define HEAD_BYTE 0xFF
 #define STX 0x02
 
-const char *port = "/dev/ttyAMA0";
+const char *port = "/dev/ttyACM3";
 int baudrate = 115200;
 int pi = pigpio_start(0, 0);
 int serial_handle{};

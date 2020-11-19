@@ -10,13 +10,12 @@
 #include<fstream>
 #include<iomanip>
 
-using namespace std::chrono;
 using std::memcpy;
-
+constexpr double max_speed = 6.0;
 #define HEAD_BYTE 0xFF
 #define STX 0x02
 
-const char *port = "/dev/ttyAMA0";
+const char *port = "/dev/ttyACM4";
 int baudrate = 115200;
 int pi = pigpio_start(0, 0);
 int serial_handle{};
@@ -99,7 +98,7 @@ void receiveSerial(float *_receive_result){
     }
   }
 }
-int main(int argc, char **argv) {
+int main() {
   try {
     serial_handle =
       serial_open(pi, const_cast<char *>(port), baudrate, dummy_flag);
@@ -113,15 +112,14 @@ int main(int argc, char **argv) {
     printf("Serial Initialize Failed\n");
     return 1;
   }
-  
+  float read_data[9]{};
+  float write_data[2]{}; //[0] = 推進速度, [1] = 旋回角度[deg]
+  /*
   Joystick joystick("/dev/input/js0");
   if(!joystick.isFound()){
     std::cerr << "open failed" << std::endl;
   }
   bool stop_loop = false;
-  SerialTermios serial;
-  float write_data[2]{}; //[0] = 推進速度, [1] = 旋回角度[deg]
-  float read_data[9]{};
 
   while (!stop_loop) {
     usleep(1000);
@@ -158,6 +156,11 @@ int main(int argc, char **argv) {
         }
       }
     }
+    //std::cout << write_data[0] << " " << write_data[1] << std::endl;
+*/  
+  while(1){
+    write_data[0] = 100;
+    write_data[1] = 200;
     sendSerial(write_data);
     receiveSerial(read_data);
     printf("%f %f %f %f %f %f %f %f %f\n", read_data[0], read_data[1], read_data[2], read_data[3], read_data[4], read_data[5], read_data[6], read_data[7], read_data[8]);
