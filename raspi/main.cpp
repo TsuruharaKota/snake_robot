@@ -15,7 +15,7 @@ constexpr double max_speed = 6.0;
 #define HEAD_BYTE 0xFF
 #define STX 0x02
 
-const char *port = "/dev/ttyACM5";
+const char *port = "/dev/ttyACM11";
 int baudrate = 115200;
 int pi = pigpio_start(0, 0);
 int serial_handle{};
