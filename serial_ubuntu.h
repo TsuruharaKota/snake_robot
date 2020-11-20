@@ -27,7 +27,7 @@ class SerialTermios{
             fcntl(_fd, F_SETFL, 0);
             tcgetattr(_fd, &_tio);
             //set baudrate
-            speed_t BAUDRATE = B115200;
+            speed_t BAUDRATE = B9600;
             cfsetispeed(&_tio, BAUDRATE);
             cfsetospeed(&_tio, BAUDRATE);
             //non canonical, non echo back
@@ -126,6 +126,8 @@ class SerialTermios{
                     size = read(_fd, _read_buf, sizeof(_read_buf));
                     if(size == 1){
                         return  _read_buf[0];
+                    }else{
+                        std::cout << "size = " << size << std::endl;
                     }
                 }
             }
