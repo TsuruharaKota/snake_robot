@@ -1,7 +1,6 @@
 #include<iostream>
 #include<string.h>
 #include"serial_ubuntu.h"
-#include<thread>
 
 int main(){
     float write_data[2] = {0, -1.3};

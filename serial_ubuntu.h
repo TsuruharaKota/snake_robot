@@ -136,7 +136,7 @@ class SerialTermios{
             //serialLoopInit();   
             uint8_t got_data{};
             uint8_t checksum_receive{};
-            uint8_t receive_data[5]{};
+            uint8_t receive_data[9]{};
             unsigned char receiveFormat[9][5] = {
                 {0, 0, 0, 0, 0},
                 {1, 0, 0, 0, 0},
