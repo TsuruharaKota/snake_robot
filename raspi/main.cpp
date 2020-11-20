@@ -15,7 +15,7 @@ constexpr double max_speed = 6.0;
 #define HEAD_BYTE 0xFF
 #define STX 0x02
 
-const char *port = "/dev/ttyACM4";
+const char *port = "/dev/ttyACM5";
 int baudrate = 115200;
 int pi = pigpio_start(0, 0);
 int serial_handle{};
@@ -69,19 +69,27 @@ void receiveSerial(float *_receive_result){
 	};
 	got_data = static_cast<uint8_t>(serial_read_byte(pi, serial_handle));
 	if(got_data == HEAD_BYTE){
+                std::cout << "HEAD_BYTE" << std::endl;
 		got_data = static_cast<uint8_t>(serial_read_byte(pi, serial_handle));
 		if(got_data == STX){
+			std::cout << "STX" << std::endl;
 			checksum_receive += HEAD_BYTE;
 			checksum_receive += STX;
 			for(int k = 0; k < 9; ++k){
 				for(int i = 0; i < 5; ++i){
 					receive_data[i] = static_cast<uint8_t>(serial_read_byte(pi, serial_handle));
 					checksum_receive += receive_data[i];
-					receiveFormat[receive_data[0]][i] = receive_data[i];
+					int temp_data  = static_cast<int>(receive_data[0]);
+                            		if((0 <= temp_data) && (temp_data <= 9)){
+                                		receiveFormat[receive_data[0]][i] = receive_data[i];
+                            		}else{
+                                		break;
+                            		}
 				}
 			}
 			got_data = static_cast<uint8_t>(serial_read_byte(pi, serial_handle));
 			if(got_data == checksum_receive){
+				std::cout << "checksum" << std::endl;
 				int32_t result[9];
 				for(int i = 0; i < 9; ++i){
 					//receiveFormat[i][0]はidである
@@ -152,7 +160,7 @@ int main() {
 						break;
 				}
 			}
-		}			
+		}
 		sendSerial(write_data);
 		receiveSerial(read_data);
 		printf("%f %f %f %f %f %f %f %f %f\n", read_data[0], read_data[1], read_data[2], read_data[3], read_data[4], read_data[5], read_data[6], read_data[7], read_data[8]);
